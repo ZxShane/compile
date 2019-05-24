@@ -1,0 +1,39 @@
+{
+  "name": "ceditor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "icon": "Ceditor.ico",
+  "build": {
+    "icon": "Ceditor.ico",
+    "win": {
+      "icon": "Ceditor.ico",
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "ia32"
+          ]
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "start": "electron main.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "build -w"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "app-root-path": "^2.0.1",
+    "iconv-lite": "^0.4.23",
+    "monaco-editor": "^0.12.0",
+    "silly-datetime": "^0.1.2"
+  },
+  "devDependencies": {
+    "electron": "^2.0.0",
+    "electron-builder": "^20.13.3",
+    "electron-reload": "^1.2.2"
+  }
+}

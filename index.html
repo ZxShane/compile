@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>编译编辑器</title>
+	<link rel="stylesheet" href="main.css">
+
+</head>
+
+<body>
+
+
+	<div id="all-container">
+		<div id="msg-bar" class="msg-bar"></div>
+		<div id="celan">
+			<div id="img1"><img src="./images/未标题-1_02.png" width="50" height="50" onclick="cifafenxi()"></div>
+			<div id="img2"><img src="./images/未标题-1_04.png" width="50" height="50" onclick="yufafenxi()"></div>
+			<div id="img3"><img src="./images/未标题-1_05.png" width="50" height="50" onclick="yuyifenxi()"></div>
+			<div id="img4"><img src="./images/未标题-1_06.png" width="50" height="50" onclick="huibian()"></div>
+			<div id="img5"><img src="./images/未标题-1_07.png" width="50" height="50"></div>
+			<!-- <div id="img"><img src="./images/未标题-1_08.png" width="50" height="50"></div> -->
+		</div>
+		<div id="container"></div>
+
+		<div id="debug-panel-line"></div>
+		<div id="debug-panel">
+			<div id="output-title">
+				<!-- <span id="question" onclick="changeque()">问题</span> -->
+				<span id="out">输出</span>
+			</div>
+			<pre id="output-panel"></pre>
+		</div>
+		<div id="changetheme">
+			<p><input type="radio" name="inputtheme" value="dark" onclick="get(this.value)" id="dark" />dark </p>
+			<p><input type="radio" name="inputtheme" value="light" onclick="get(this.value)" id="light" />light</p>
+			<p><input type="radio" name="inputtheme" value="pikachu" onclick="get(this.value)" id="pikachu" />pikachu
+				<audio hidden id="pika"></audio></p>
+
+		</div>
+	</div>
+
+</body>
+
+<script>
+	// Monaco uses a custom amd loader that overrides node's require.
+	// Keep a reference to node's require so we can restore it after executing the amd loader file.
+	var nodeRequire = global.require;
+</script>
+
+<script src="./node_modules/monaco-editor/min/vs/loader.js"></script>
+<script>
+	// Save Monaco's amd require and restore Node's require
+	var amdRequire = global.require;
+	global.require = nodeRequire;
+</script>
+
+<script>
+	const { ipcRenderer } = require('electron')
+	const msgBar = require('./render-process/msg-bar')
+	const fs = require('fs')
+
+	ipcRenderer.on('save-sucessfully', (event, msg) => {
+		console.log(msg)
+		msgBar.sucess(msg)
+	})
+	ipcRenderer.on('save-error', (event, msg) => {
+		msgBar.error(msg)
+	})
+	// require node modules before loader.js comes in
+	var path = require('path');
+	var myAuto = document.getElementById('pika');
+	function uriFromPath(_path) {
+		var pathName = path.resolve(_path).replace(/\\/g, '/');
+		if (pathName.length > 0 && pathName.charAt(0) !== '/') {
+			pathName = '/' + pathName;
+		}
+		return encodeURI('file://' + pathName);
+	}
+	amdRequire.config({
+		'vs/nls': {
+			availableLanguages: {
+				'*': 'zh-cn'
+			}
+		},
+		baseUrl: uriFromPath(path.join(__dirname, './node_modules/monaco-editor/dev'))
+	});
+	// workaround monaco-css not understanding the environment
+	self.module = undefined;
+	// workaround monaco-typescript not understanding the environment
+	self.process.browser = true;
+	var editortheme;
+	if (window.localStorage.getItem('mytheme') == null) {
+		window.localStorage.setItem('mytheme', 'vs-dark');
+		document.getElementById('dark').checked = true;
+
+	}
+	var cho0se;
+	if (window.localStorage.getItem('choose') == null) {
+		window.localStorage.setItem('choose', 'dark')
+
+	}
+
+	editortheme = window.localStorage.getItem('mytheme');
+	choose = window.localStorage.getItem('choose');
+	if (choose == 'dark') {
+		document.getElementById('dark').checked = true;
+		//document.body.style.backgroundColor = '#1e1e1e';
+	}
+	else if (choose == 'light') {
+		document.getElementById('light').checked = true;
+		setlight();
+
+	}
+	else {
+		document.getElementById('pikachu').checked = true;
+		setpikachu();
+	}
+
+
+	function setlight() {
+		document.body.style.backgroundColor = "white";
+		var celan = document.getElementById('celan');
+		celan.style.backgroundColor = "whitesmoke;";
+		var changetheme = document.getElementById('changetheme');
+		changetheme.style.color = "black";
+		var debug = document.getElementById('debug-panel');
+		debug.style.backgroundColor = "whitesmoke;";
+		var outtitle = document.getElementById('output-title');
+		outtitle.style.backgroundColor = "whitesmoke;";
+		var out = document.getElementById('out');
+		out.style.color = "black";
+	}
+	function setpikachu() {
+		
+		myAuto.src = './audio/pikaqiu.mp3';//MP3路径
+		myAuto.play();
+		document.body.style.backgroundColor = "beige";
+		var img1 = document.getElementById('img1');
+		img1.innerHTML = "<img src=\"./images/皮卡丘皮肤切片_03.png\" width=\"60\" height=\"50\" onclick=\"cifafenxi()\">";
+		var img2 = document.getElementById('img2');
+		img2.innerHTML = "<img src=\"./images/皮卡丘皮肤切片_05.png\" width=\"60\" height=\"50\" onclick=\"yufafenxi()\">"
+		var img3 = document.getElementById('img3');
+		img3.innerHTML = "<img src=\"./images/皮卡丘皮肤切片_06.png\" width=\"60\" height=\"50\" onclick=\"yuyifenxi()\">"
+		var img4 = document.getElementById('img4');
+		img4.innerHTML = "<img src=\"./images/皮卡丘皮肤切片_07.png\" width=\"60\" height=\"50\" onclick=\"huibian()\">"
+		var img5 = document.getElementById('img5');
+		img5.innerHTML = "<img src=\"./images/皮卡丘皮肤切片_08.png\" width=\"60\" height=\"50\">"
+		var out = document.getElementById('out');
+		out.style.color = "black";
+		var debug = document.getElementById('debug-panel');
+		debug.style.backgroundColor = "beige"
+		var outtitle = document.getElementById('output-title');
+		outtitle.style.backgroundColor = "beige";
+		var changetheme = document.getElementById('changetheme');
+		changetheme.style.color = "black";
+
+	}
+	amdRequire(['vs/editor/editor.main'], function () {
+		var editor = monaco.editor.create(document.getElementById('container'), {
+			value: [
+				'int main() {',
+				'\tprintf("Hello World!\\n");',
+				'}'
+			].join('\n'),
+			language: 'c',
+			theme: editortheme,
+			fontSize: 16,
+			automaticLayout: true
+		});
+		console.log(editor)
+		ipcRenderer.on('open-file-data', (event, data) => {
+			editor.setValue(data)
+		})
+		ipcRenderer.on('create-file', (event, data) => {
+			editor.setValue(data)
+		})
+		ipcRenderer.on('to-save-file', (event, data) => {
+			console.log(data)
+			if (!data) {
+				ipcRenderer.send('save-as-file', editor.getValue())
+			} else {
+				ipcRenderer.send('save-file', editor.getValue())
+			}
+		})
+		ipcRenderer.on('to-save-as-file', (event, data) => {
+			ipcRenderer.send('save-as-file', editor.getValue())
+		})
+		ipcRenderer.on('to-get-editor-value', (event, data) => {
+			ipcRenderer.send('get-editor-value', {
+				code: data,
+				data: editor.getValue()
+			})
+		})
+		ipcRenderer.on('editor-undo', (event, data) => {
+			editor.trigger('', 'undo')
+		})
+		ipcRenderer.on('editor-redo', (event, data) => {
+			editor.trigger('', 'redo')
+		})
+	});
+
+	function outputShowDone(msg) {
+		outPutPanel.style.color = '#00FEB0'
+		switch (msg.code) {
+			case 'lex': msgBar.sucess('词法分析成功'); break;
+			case 'parse': msgBar.sucess('语法分析成功'); break;
+			case 'sem': msgBar.sucess('语义分析成功'); break;
+			case 'asm': msgBar.sucess('生成汇编码成功 ' + msg.path); break;
+			case 'target': msgBar.sucess('生成机器码成功 ' + msg.path); break;
+			case 'run': msgBar.sucess('运行成功'); break;
+		}
+		let tmpMsgData = msg.data
+		tmpMsgData = tmpMsgData.replace(/>/g, "&gt;")
+		tmpMsgData = msg.data.replace(/</g, "&lt;")
+		if (msg.code === 'target' || msg.code === 'asm')
+			outPutPanel.innerHTML = tmpMsgData + '\n文件位置:' + msg.path
+		else
+			outPutPanel.innerHTML = tmpMsgData
+	}
+	function outputShowError(msg) {
+		outPutPanel.style.color = 'red'
+		switch (msg.code) {
+			case 'lex': msgBar.error('词法分析时出现错误'); break;
+			case 'parse': msgBar.error('语法分析时出现错误'); break;
+			case 'sem': msgBar.error('语义分析时出现错误'); break;
+			case 'asm': msgBar.error('生成汇编码时出现错误'); break;
+			case 'target': msgBar.error('生成机器码时出现错误'); break;
+			case 'run': msgBar.error('运行时出现错误'); break;
+		}
+		let tmpMsgData = msg.data
+		tmpMsgData = tmpMsgData.replace(/>/g, "&gt;")
+		tmpMsgData = msg.data.replace(/</g, "&lt;")
+		outPutPanel.innerHTML = tmpMsgData
+	}
+	const outPutPanel = document.getElementById('output-panel')
+	ipcRenderer.on('analysis-done', (event, msg) => { outputShowDone(msg); })
+	ipcRenderer.on('analysis-err', (event, msg) => { outputShowError(msg); })
+	function cifafenxi() {
+		fs.readFile('./cifa.txt', { flag: 'r+', encoding: 'utf-8' }, function (err, data) {
+			if (err) {
+				console.error(err);
+				return;
+			}
+			if (choose == 'pikachu') {
+				myAuto.src = './audio/cifapika.mp3';//MP3路径
+				myAuto.play();
+			}
+			console.log(data);
+			outPutPanel.innerHTML = data;
+		});
+	}
+	function yufafenxi() {
+		fs.readFile('./yufa.txt', { flag: 'r+', encoding: 'utf-8' }, function (err, data) {
+			if (err) {
+				console.error(err);
+				return;
+			}
+			if (choose == 'pikachu') {
+				myAuto.src = './audio/yufapika.mp3';//MP3路径
+				myAuto.play();
+			}
+			let tmpMsgData = data
+			tmpMsgData = tmpMsgData.replace(/>/g, "&gt;")
+			tmpMsgData = data.replace(/</g, "&lt;")
+			outPutPanel.innerHTML = tmpMsgData;
+		});
+	}
+	function yuyifenxi() {
+		fs.readFile('./yuyi.txt', { flag: 'r+', encoding: 'utf-8' }, function (err, data) {
+			if (err) {
+				console.error(err);
+				return;
+			}
+			if (choose == 'pikachu') {
+				myAuto.src = './audio/yuyipika.mp3';//MP3路径
+				myAuto.play();
+			}
+			let tmpMsgData = data
+			tmpMsgData = tmpMsgData.replace(/>/g, "&gt;")
+			tmpMsgData = data.replace(/</g, "&lt;")
+			outPutPanel.innerHTML = tmpMsgData;
+		});
+	}
+	function huibian() {
+		fs.readFile('./huibian.txt', { flag: 'r+', encoding: 'utf-8' }, function (err, data) {
+			if (err) {
+				console.error(err);
+				return;
+			}
+			if (choose == 'pikachu') {
+				myAuto.src = './audio/huibian.mp3';//MP3路径
+				myAuto.play();
+			}
+			let tmpMsgData = data
+			tmpMsgData = tmpMsgData.replace(/>/g, "&gt;")
+			tmpMsgData = data.replace(/</g, "&lt;")
+			outPutPanel.innerHTML = tmpMsgData;
+		});
+	}
+	function get(value) {
+
+		if (value == 'dark') {
+			window.localStorage.setItem('mytheme', 'vs-dark')
+			window.localStorage.setItem('choose', 'dark')
+
+
+
+		} else if (value == 'light') {
+			window.localStorage.setItem('mytheme', 'vs');
+			window.localStorage.setItem('choose', 'light')
+		}
+		else {
+			window.localStorage.setItem('mytheme', 'vs');
+			window.localStorage.setItem('choose', 'pikachu')
+		}
+
+		window.location.reload();
+	}
+</script>
+<script src="renderer.js"></script>
+
+</html>
